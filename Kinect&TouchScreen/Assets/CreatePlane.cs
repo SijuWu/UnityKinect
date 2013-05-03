@@ -189,5 +189,10 @@ public class CreatePlane : MonoBehaviour
 	{
 		return screenCenter;
 	}
+	
+	public Vector3 getStartPoint ()
+	{
+		return screenRef [0];
+	}
 }
 

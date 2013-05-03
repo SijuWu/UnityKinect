@@ -23,7 +23,12 @@ public class kinectSkeleton : MonoBehaviour
 	
 	public Transform LeftHand;
 	public Transform RightHand;
-	
+	public GameObject leftHandPrefab;
+	public GameObject rightHandPrefab;
+	bool leftHandTrack = false;
+	bool rightHandTrack = false;
+	GameObject rightHandInstance;
+	GameObject leftHandInstance;
 	public bool mirror = false;
 	public bool UpdateJointPositions = false;
 	public bool UpdateRootPosition = false;
@@ -38,6 +43,7 @@ public class kinectSkeleton : MonoBehaviour
 	private Vector3 rootPosition;
 	public Vector3 leftHandViewport;
 	public Vector3 rightHandViewport;
+	float F = 0.0019047619f;
 	
 	ZigJointId mirrorJoint (ZigJointId joint)
 	{
@@ -94,6 +100,7 @@ public class kinectSkeleton : MonoBehaviour
 //		transforms [(int)ZigJointId.RightWrist] = RightWrist;
 //		transforms [(int)ZigJointId.RightFingertip] = RightFingertip;
 		
+		//Set the transforms
 		transforms [(int)ZigJointId.LeftHand] = GameObject.Find ("leftHand").transform;
 		transforms [(int)ZigJointId.RightHand] = GameObject.Find ("rightHand").transform;
 
@@ -163,53 +170,81 @@ public class kinectSkeleton : MonoBehaviour
 		Camera userCamera = GameObject.Find ("UserCamera").camera;
 		CreatePlane createPlane = GameObject.Find ("Screen").GetComponent<CreatePlane> ();
 		
+		//In zigFu, the left hand represents the right hand and the right hand represents the left hand
 		if (UpdateJointPositions) {
-			if (joint == ZigJointId.LeftHand) {
+			if (joint == ZigJointId.RightHand) {
+				//Get the object of the left hand
 				GameObject leftHand = GameObject.Find ("leftHand");
-	
-				Vector3 imageHand = ZigInput.ConvertWorldToImageSpace (position);
-				OpenNI.Point3D image = new OpenNI.Point3D ((640 - imageHand.x), imageHand.y, -imageHand.z);
-				float F = 0.0019047619f;
-				OpenNI.Point3D real = new OpenNI.Point3D ((image.X - 320) * image.Z * F, (image.Y - 240) * image.Z * F, image.Z);	
-				print ("RightHand" + real.X + " " + real.Y + " " + real.Z);
-			
-				Vector3 destination = new Vector3 (real.X, real.Y, real.Z);
-
-				leftHand.transform.position = Vector3.Lerp (leftHand.transform.position, destination, Time.deltaTime * Damping);
+				//Set the position of leftHand in the space
+				getSpacePosition (leftHand, position);
 				
-				Vector3 leftHandScreen = screenReference.transform.InverseTransformPoint (leftHand.transform.position);
 				
-				double leftXCoor = (leftHandScreen - createPlane.getScreenRef () [0]).z / createPlane.getScreenWidth ();
-				double leftYCoor = (-leftHandScreen + createPlane.getScreenRef () [0]).x / createPlane.getScreenHeight ();
+				if (leftHandTrack == false) {
+					leftHandInstance = (GameObject)Instantiate (leftHandPrefab, userCamera.transform.position, userCamera.transform.rotation);
+					leftHandTrack = true;
+				}
 				
-
-				leftHandViewport = new Vector3 ((float)(leftXCoor), (float)(1 - leftYCoor), (float)0);
-			
+				if (leftHandTrack == true) {
+					//Set the position of the left hand projection in the viewport
+					leftHandViewport = getViewportPosition (screenReference, leftHand.transform.position, createPlane.getStartPoint (), createPlane.getScreenWidth (), createPlane.getScreenHeight ());
+					setProjectionPosition (leftHandViewport, leftHandInstance, userCamera);
+				}
+				
+		
 				
 				
 			}
-			if (joint == ZigJointId.RightHand) {
+			if (joint == ZigJointId.LeftHand) {
+				//Get the object of the right hand
 				GameObject rightHand = GameObject.Find ("rightHand");
-//				
-				Vector3 imageHand = ZigInput.ConvertWorldToImageSpace (position);
-				OpenNI.Point3D image = new OpenNI.Point3D ((640 - imageHand.x), imageHand.y, -imageHand.z);
-				float F = 0.0019047619f;
-				OpenNI.Point3D real = new OpenNI.Point3D ((image.X - 320) * image.Z * F, (image.Y - 240) * image.Z * F, image.Z);	
-				print ("RightHand" + real.X + " " + real.Y + " " + real.Z);
-
-				Vector3 destination = new Vector3 (real.X, real.Y, real.Z);
-				rightHand.transform.position = Vector3.Lerp (rightHand.transform.position, destination, Time.deltaTime * Damping);
+				//Set the position of rightHand in the space
+				getSpacePosition (rightHand, position);
 				
-				Vector3 rightHandScreen = screenReference.transform.InverseTransformPoint (rightHand.transform.position);
 				
-				double rightXCoor = (rightHandScreen - createPlane.getScreenRef () [0]).z / createPlane.getScreenWidth ();
-				double rightYCoor = (-rightHandScreen + createPlane.getScreenRef () [0]).x / createPlane.getScreenHeight ();
+			
+				if (rightHandTrack == false) {
+					rightHandInstance = (GameObject)Instantiate (rightHandPrefab, userCamera.transform.position, userCamera.transform.rotation);
+					rightHandTrack = true;
+				}
 				
-
-				rightHandViewport = new Vector3 ((float)(rightXCoor), (float)(1 - rightYCoor), (float)0);
+				if (rightHandTrack == true) {
+					//Set the position of the right hand projection in the viewport
+					rightHandViewport = getViewportPosition (screenReference, rightHand.transform.position, createPlane.getStartPoint (), createPlane.getScreenWidth (), createPlane.getScreenHeight ());
+					setProjectionPosition (rightHandViewport, rightHandInstance, userCamera);
+				}
 				
 			}
 		}
+	}
+	
+	void getSpacePosition (GameObject representation, Vector3 position)
+	{
+		//Get the hand position in the image
+		Vector3 imagePosition = ZigInput.ConvertWorldToImageSpace (position);
+		OpenNI.Point3D image = new OpenNI.Point3D ((640 - imagePosition.x), imagePosition.y, -imagePosition.z);
+
+		//Get the hand position in the space
+		OpenNI.Point3D real = new OpenNI.Point3D ((image.X - 320) * image.Z * F, (image.Y - 240) * image.Z * F, image.Z);	
+		Vector3 destination = new Vector3 (real.X, real.Y, real.Z);
+
+		representation.transform.position = Vector3.Lerp (representation.transform.position, destination, Time.deltaTime * Damping);
+	}
+	
+	Vector3 getViewportPosition (GameObject screenReference, Vector3 position, Vector3 startPoint, double screenWidth, double screenHeight)
+	{
+		Vector3 leftHandScreen = screenReference.transform.InverseTransformPoint (position);
+				
+		double leftXCoor = (leftHandScreen - startPoint).z / screenWidth;
+		double leftYCoor = (-leftHandScreen + startPoint).x / screenHeight;
+				
+		Vector3 viewportPosition = new Vector3 ((float)(leftXCoor), (float)(1 - leftYCoor), (float)0);
+		return viewportPosition;
+	}
+	
+	void setProjectionPosition (Vector3 viewportPosition, GameObject instance, Camera userCamera)
+	{
+		Vector3 screenPos = new Vector3 (viewportPosition.x * userCamera.pixelWidth, viewportPosition.y * userCamera.pixelHeight, 0);
+		instance.transform.position = userCamera.ScreenToViewportPoint (screenPos);
 	}
 
 	public void RotateToCalibrationPose ()
