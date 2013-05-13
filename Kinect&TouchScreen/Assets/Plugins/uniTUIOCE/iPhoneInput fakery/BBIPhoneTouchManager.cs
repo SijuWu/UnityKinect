@@ -3,15 +3,15 @@ using System.Collections;
 using TUIO;
 using System.Collections.Generic;
 
-public class BBIPhoneTouchManager : BBInputDelegate {
+public class BBIPhoneTouchManager : BBInputDelegate
+{
 
 	public bool convertMouseToTouch = true;
-
 	private static BBIPhoneTouchManager sharedEventManager = null;
 
 //	private int fakeEventID = 1000;
 	
-	public ArrayList activeIphoneTouches = new ArrayList();
+	public ArrayList activeIphoneTouches = new ArrayList ();
 // This defines a static instance property that attempts to find the manager object in the scene and
 // returns it to the caller.
 	public static BBIPhoneTouchManager instance {
@@ -19,51 +19,55 @@ public class BBIPhoneTouchManager : BBInputDelegate {
 			if (sharedEventManager == null) {
 				// This is where the magic happens.
 				//  FindObjectOfType(...) returns the first AManager object in the scene.
-				sharedEventManager =  FindObjectOfType(typeof (BBIPhoneTouchManager)) as BBIPhoneTouchManager;
+				sharedEventManager = FindObjectOfType (typeof(BBIPhoneTouchManager)) as BBIPhoneTouchManager;
 				if (sharedEventManager == null)
 					Debug.Log ("Could not locate a TouchEventManager object. You have to have exactly one TouchEventManager in the scene.");
-				}
+			}
 			return sharedEventManager;
 		}
 	}
 	
-	public override void finishFrame() {
+	public override void finishFrame ()
+	{
 		// this is called when the TUIO fseq message comes through, and it is
 		// the end of this cycle.
 		// we want to convert all the touchEvents into iPhoneTouch Objects
-		activeIphoneTouches.Clear();
+		activeIphoneTouches.Clear ();
 		
 		// any events 
 		foreach (BBTouchEvent anEvent in activeEvents.Values) {
-			activeIphoneTouches.Add(touchWithEvent(anEvent));
+			activeIphoneTouches.Add (touchWithEvent (anEvent));
 		}
-		base.finishFrame();
+		base.finishFrame ();
 	}
 	
-	public iPhoneTouch touchWithEvent(BBTouchEvent anEvent)
+	public iPhoneTouch touchWithEvent (BBTouchEvent anEvent)
 	{
-		iPhoneTouch newTouch = new iPhoneTouch();
+		iPhoneTouch newTouch = new iPhoneTouch ();
 		newTouch.fingerId = (int)anEvent.eventID;
 		newTouch.position.x = anEvent.screenPosition.x;
 		newTouch.position.y = anEvent.screenPosition.y;
 		newTouch.deltaPosition.x = anEvent.screenPosition.x - anEvent.lastScreenPosition.x;
 		newTouch.deltaPosition.y = anEvent.screenPosition.y - anEvent.lastScreenPosition.y;
-		if(newTouch.deltaPosition.x!=0)
-		{
-			int a=1;
-		}
+		
 		newTouch.deltaTime = anEvent.touchTime - anEvent.lastTouchTime;
 		newTouch.tapCount = 1; // no tap recog yet
-		if (anEvent.eventState == BBTouchEventState.Began) newTouch.phase = iPhoneTouchPhase.Began;
-		if (anEvent.eventState == BBTouchEventState.Moved) newTouch.phase = iPhoneTouchPhase.Moved;
-		if (anEvent.eventState == BBTouchEventState.Stationary) newTouch.phase = iPhoneTouchPhase.Stationary;
-		if (anEvent.eventState == BBTouchEventState.Ended) newTouch.phase = iPhoneTouchPhase.Ended;
+		if (anEvent.eventState == BBTouchEventState.Began)
+			newTouch.phase = iPhoneTouchPhase.Began;
+		if (anEvent.eventState == BBTouchEventState.Moved)
+			newTouch.phase = iPhoneTouchPhase.Moved;
+		if (anEvent.eventState == BBTouchEventState.Stationary)
+			newTouch.phase = iPhoneTouchPhase.Stationary;
+		if (anEvent.eventState == BBTouchEventState.Ended)
+			newTouch.phase = iPhoneTouchPhase.Ended;
 		return newTouch;
 	}
 	
 	// Update is called once per frame
-	void LateUpdate () {		
-		if (!convertMouseToTouch) return;
+	void LateUpdate ()
+	{		
+		if (!convertMouseToTouch)
+			return;
 		//////////////////////////////////////////////////
 		// this is all about making fake events from the mouse for testing
 		////////////////////////////////////////////////////
@@ -71,9 +75,11 @@ public class BBIPhoneTouchManager : BBInputDelegate {
 		if (cam == null) {
 			// someone didnt tag their cameras properly!!
 			// just grab the first one
-			if (Camera.allCameras.Length == 0) return;
-			cam = Camera.allCameras[0];
-			if (cam == null) return;
+			if (Camera.allCameras.Length == 0)
+				return;
+			cam = Camera.allCameras [0];
+			if (cam == null)
+				return;
 		}
 		
 //		if (Input.GetMouseButtonDown(0)) {
@@ -111,6 +117,6 @@ public class BBIPhoneTouchManager : BBInputDelegate {
 //		    TuioCursor fakeCursor  = new TuioCursor(fakeEventID + 1,5,fakepos.x,1.0f - fakepos.y);		
 //			this.cursorMove(fakeCursor);
 //		}
-	  this.finishFrame();
+		this.finishFrame ();
 	}
 }

@@ -69,8 +69,17 @@
  <Reference Include="Emgu.CV">
  <HintPath>Assets\Plugins\Emgu.CV.dll</HintPath>
  </Reference>
+ <Reference Include="Emgu.CV.ML">
+ <HintPath>Assets\Emgu.CV.ML.dll</HintPath>
+ </Reference>
+ <Reference Include="Emgu.CV.UI">
+ <HintPath>Assets\Emgu.CV.UI.dll</HintPath>
+ </Reference>
  <Reference Include="Emgu.Util">
  <HintPath>Assets\Plugins\Emgu.Util.dll</HintPath>
+ </Reference>
+ <Reference Include="ZedGraph">
+ <HintPath>Assets\ZedGraph.dll</HintPath>
  </Reference>
  <Reference Include="System.Drawing">
  <HintPath>Assets\Plugins\System.Drawing.dll</HintPath>

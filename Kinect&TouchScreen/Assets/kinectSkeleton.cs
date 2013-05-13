@@ -2,25 +2,28 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using System.Drawing;
 
-public class kinectSkeleton : MonoBehaviour
+public class KinectSkeleton : MonoBehaviour
 {
 //Use in the future
-//	public Transform Head;
-//	public Transform Neck;
-//	public Transform Torso;
-//	public Transform Waist;
-//	public Transform LeftCollar;
-//	public Transform LeftShoulder;
-//	public Transform LeftElbow;
-//	public Transform LeftWrist;
-//	public Transform LeftFingertip;
-//	public Transform RightCollar;
-//	public Transform RightShoulder;
-//	public Transform RightElbow;
-//	public Transform RightWrist;
-//	public Transform RightFingertip;
-	
+	public Transform Head;
+	public Transform Neck;
+	public Transform Torso;
+	public Transform Waist;
+	public Transform LeftCollar;
+	public Transform LeftShoulder;
+	public Transform LeftElbow;
+	public Transform LeftWrist;
+	public Transform LeftFingertip;
+	public Transform RightCollar;
+	public Transform RightShoulder;
+	public Transform RightElbow;
+	public Transform RightWrist;
+	public Transform RightFingertip;
 	public Transform LeftHand;
 	public Transform RightHand;
 	public GameObject leftHandPrefab;
@@ -41,10 +44,12 @@ public class kinectSkeleton : MonoBehaviour
 	private Transform[] transforms;
 	private Quaternion[] initialRotations;
 	private Vector3 rootPosition;
-	public Vector3 leftHandViewport;
-	public Vector3 rightHandViewport;
+	Vector3 leftHandViewport;
+	Vector3 rightHandViewport;
 	float F = 0.0019047619f;
-	
+	Image<Gray,byte> handDepth = new Image<Gray, byte> (640, 480);
+	Image<Bgr,byte> handColor = new Image<Bgr, byte> (640, 480);
+
 	ZigJointId mirrorJoint (ZigJointId joint)
 	{
 		switch (joint) {
@@ -60,7 +65,6 @@ public class kinectSkeleton : MonoBehaviour
 			return ZigJointId.RightHand;
 		case ZigJointId.LeftFingertip:
 			return ZigJointId.RightFingertip;
-	
 		case ZigJointId.RightCollar:
 			return ZigJointId.LeftCollar;
 		case ZigJointId.RightShoulder:
@@ -85,24 +89,24 @@ public class kinectSkeleton : MonoBehaviour
 		transforms = new Transform[jointCount];
 		initialRotations = new Quaternion[jointCount];
 
-//		transforms [(int)ZigJointId.Head] = Head;
-//		transforms [(int)ZigJointId.Neck] = Neck;
-//		transforms [(int)ZigJointId.Torso] = Torso;
-//		transforms [(int)ZigJointId.Waist] = Waist;
-//		transforms [(int)ZigJointId.LeftCollar] = LeftCollar;
-//		transforms [(int)ZigJointId.LeftShoulder] = LeftShoulder;
-//		transforms [(int)ZigJointId.LeftElbow] = LeftElbow;
-//		transforms [(int)ZigJointId.LeftWrist] = LeftWrist;
-//		transforms [(int)ZigJointId.LeftFingertip] = LeftFingertip;
-//		transforms [(int)ZigJointId.RightCollar] = RightCollar;
-//		transforms [(int)ZigJointId.RightShoulder] = RightShoulder;
-//		transforms [(int)ZigJointId.RightElbow] = RightElbow;
-//		transforms [(int)ZigJointId.RightWrist] = RightWrist;
-//		transforms [(int)ZigJointId.RightFingertip] = RightFingertip;
+		transforms [(int)ZigJointId.Head] = Head;
+		transforms [(int)ZigJointId.Neck] = Neck;
+		transforms [(int)ZigJointId.Torso] = Torso;
+		transforms [(int)ZigJointId.Waist] = Waist;
+		transforms [(int)ZigJointId.LeftCollar] = LeftCollar;
+		transforms [(int)ZigJointId.LeftShoulder] = LeftShoulder;
+		transforms [(int)ZigJointId.LeftElbow] = LeftElbow;
+		transforms [(int)ZigJointId.LeftWrist] = LeftWrist;
+		transforms [(int)ZigJointId.LeftFingertip] = LeftFingertip;
+		transforms [(int)ZigJointId.RightCollar] = RightCollar;
+		transforms [(int)ZigJointId.RightShoulder] = RightShoulder;
+		transforms [(int)ZigJointId.RightElbow] = RightElbow;
+		transforms [(int)ZigJointId.RightWrist] = RightWrist;
+		transforms [(int)ZigJointId.RightFingertip] = RightFingertip;
 		
 		//Set the transforms
-		transforms [(int)ZigJointId.LeftHand] = GameObject.Find ("leftHand").transform;
-		transforms [(int)ZigJointId.RightHand] = GameObject.Find ("rightHand").transform;
+		transforms [(int)ZigJointId.LeftHand] = GameObject.Find ("LeftHand").transform;
+		transforms [(int)ZigJointId.RightHand] = GameObject.Find ("RightHand").transform;
 
 
 
@@ -174,7 +178,7 @@ public class kinectSkeleton : MonoBehaviour
 		if (UpdateJointPositions) {
 			if (joint == ZigJointId.RightHand) {
 				//Get the object of the left hand
-				GameObject leftHand = GameObject.Find ("leftHand");
+				GameObject leftHand = GameObject.Find ("LeftHand");
 				//Set the position of leftHand in the space
 				getSpacePosition (leftHand, position);
 				
@@ -189,14 +193,11 @@ public class kinectSkeleton : MonoBehaviour
 					leftHandViewport = getViewportPosition (screenReference, leftHand.transform.position, createPlane.getStartPoint (), createPlane.getScreenWidth (), createPlane.getScreenHeight ());
 					setProjectionPosition (leftHandViewport, leftHandInstance, userCamera);
 				}
-				
-		
-				
-				
+
 			}
 			if (joint == ZigJointId.LeftHand) {
 				//Get the object of the right hand
-				GameObject rightHand = GameObject.Find ("rightHand");
+				GameObject rightHand = GameObject.Find ("RightHand");
 				//Set the position of rightHand in the space
 				getSpacePosition (rightHand, position);
 				
@@ -222,8 +223,48 @@ public class kinectSkeleton : MonoBehaviour
 		//Get the hand position in the image
 		Vector3 imagePosition = ZigInput.ConvertWorldToImageSpace (position);
 		OpenNI.Point3D image = new OpenNI.Point3D ((640 - imagePosition.x), imagePosition.y, -imagePosition.z);
-
+		
+		//Detect Hand
+		ScreenDetection screenDetection = GameObject.Find ("Screen").GetComponent<ScreenDetection> ();
+		Image<Gray,byte> depthImage = screenDetection.getKinectDepth ();
+		Image<Bgr,byte> colorImage = screenDetection.getKinectColor ();
+		short[] originalDepth = screenDetection.getOriginalDepth ();
+		byte[,,] depthData = depthImage.Data;
+		byte[,,] handDepthData = handDepth.Data;
+		byte[,,] colorData = colorImage.Data;
+		byte[,,] handColorData = handColor.Data;
+	
+		int edge = 50;
+		int centerX = (int)(640 - imagePosition.x);
+		int centerY = (int)(480 - imagePosition.y);
+		for (int i=(int)(centerX-edge); i<(int)(centerX+edge); i++) {
+			for (int j=(int)(centerY-edge); j<(int)(centerY+edge); j++) {
+			
+				short centerDepth = originalDepth [centerY * 640 + centerX];
+				short anotherDepth = originalDepth [j * 640 + i];
+				
+				if (System.Math.Abs (anotherDepth - centerDepth) < 250) {
+					handDepthData [j, i, 0] = depthData [j, i, 0];
+					handColorData [j, i, 0] = colorData [j, i, 0];
+					handColorData [j, i, 1] = colorData [j, i, 1];
+					handColorData [j, i, 2] = colorData [j, i, 2];
+				}	
+			}
+		}
+		handDepth.Draw (new CircleF (new PointF (640 - imagePosition.x, 480 - imagePosition.y), 1), new Gray (255), 1);
+		string win7 = "handCenterDepth";
+		Emgu.CV.CvInvoke.cvNamedWindow (win7);
+		CvInvoke.cvShowImage (win7, handDepth);
+		
+		string win8 = "mix";
+		Emgu.CV.CvInvoke.cvNamedWindow (win8);
+		Image<Bgr,byte> mixHand = new Image<Bgr, byte> (640, 480);
+		CvInvoke.cvAddWeighted (handColor, 0.5, handDepth.Convert<Bgr,byte> (), 0.5, 0, mixHand);
+		CvInvoke.cvShowImage (win8, mixHand);
+		//
+		
 		//Get the hand position in the space
+	
 		OpenNI.Point3D real = new OpenNI.Point3D ((image.X - 320) * image.Z * F, (image.Y - 240) * image.Z * F, image.Z);	
 		Vector3 destination = new Vector3 (real.X, real.Y, real.Z);
 
@@ -256,12 +297,12 @@ public class kinectSkeleton : MonoBehaviour
 		}
 
 		// calibration pose is skeleton base pose ("T") with both elbows bent in 90 degrees
-//		if (null != RightElbow) {
-//			RightElbow.rotation = transform.rotation * Quaternion.Euler (0, -90, 90) * initialRotations [(int)ZigJointId.RightElbow];
-//		}
-//		if (null != LeftElbow) {
-//			LeftElbow.rotation = transform.rotation * Quaternion.Euler (0, 90, -90) * initialRotations [(int)ZigJointId.LeftElbow];
-//		}
+		if (null != RightElbow) {
+			RightElbow.rotation = transform.rotation * Quaternion.Euler (0, -90, 90) * initialRotations [(int)ZigJointId.RightElbow];
+		}
+		if (null != LeftElbow) {
+			LeftElbow.rotation = transform.rotation * Quaternion.Euler (0, 90, -90) * initialRotations [(int)ZigJointId.LeftElbow];
+		}
 	}
 
 	public void SetRootPositionBias ()
@@ -277,6 +318,8 @@ public class kinectSkeleton : MonoBehaviour
 	void Zig_UpdateUser (ZigTrackedUser user)
 	{
 		UpdateRoot (user.Position);
+		handDepth.SetZero ();
+		handColor.SetZero ();
 		if (user.SkeletonTracked) {
 			foreach (ZigInputJoint joint in user.Skeleton) {
 				if (joint.GoodPosition)
@@ -287,4 +330,25 @@ public class kinectSkeleton : MonoBehaviour
 		}
 	}
 
+	public Vector3 getLHViewPosition ()
+	{
+		return leftHandViewport;
+	}
+
+	public Vector3 getRHViewPosition ()
+	{
+		return rightHandViewport;
+	}
+	
+	public GameObject getLHInstance ()
+	{
+		return leftHandInstance;
+	}
+	
+	public GameObject getRHInstance ()
+	{
+		return rightHandInstance;
+	}
+
 }
+

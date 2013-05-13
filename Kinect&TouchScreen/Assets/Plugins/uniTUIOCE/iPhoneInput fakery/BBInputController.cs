@@ -92,6 +92,7 @@ public class BBInputController : TuioListener {
 	public void updateTuioCursor(TuioCursor c) {
 		lock(objectSync) {
 			if (collectEvents) activeCursorEvents.Add(new BBCursorEvent(c,BBCursorState.Update));
+//			Debug.Log("BBInputController "+c.getPosition().getX()+" "+c.getPosition().getY());
 		}
 	}
 

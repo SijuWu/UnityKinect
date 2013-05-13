@@ -6,21 +6,30 @@ public class MultiTouchManipulation : MultiTouchObject
 	public bool allowDrag = true;
 	public bool allowScale = true;
 	public bool allowRotate = true;
+	public bool allowSpace = true;
 	public bool allowTranslationZ = true;
 	public float minimumScale = 1.0f;
 	public float maximumScale = 50.0f;
 	private Transform saveParent;
 	private Vector3 xyMovement;
 	private Vector3 zMovement;
+	float zMulitiplitation = 3;
 	protected GameObject pivot;
+	Vector3 lastTouch;
 
 	public override void handleSingleTouch (iPhoneTouch touch)
 	{
 		if (!allowDrag)
 			return;
 		// // we want to drag our object
-
-		xyMovement = touchMovementVector (touch);
+//		print (touch.position.x+" "+touch.deltaPosition.x);
+		
+//		xyMovement = touchMovementVector (touch);
+		foreach (iPhoneTouch lastTouch in lastMultiTouches) {
+			if (lastTouch.fingerId == touch.fingerId) {
+				xyMovement = touchMovementVector (touch, lastTouch);
+			}
+		}
 //		if (movement.sqrMagnitude > 0.01) {
 		this.startPivot (gameObject.transform.position); 
 		pivot.transform.Translate (xyMovement, Space.World);
@@ -32,7 +41,23 @@ public class MultiTouchManipulation : MultiTouchObject
 	{
 		if (!allowTranslationZ)
 			return;
-		zMovement = new Vector3 (0, touchMovementVector (zTouch).x, 0);
+		bool lift = false;
+		foreach (iPhoneTouch lastTouch in lastMultiTouches) {
+			if (lastTouch.fingerId == zTouch.fingerId) {
+				zMovement = touchMovementVector (zTouch, lastTouch);
+				if (lastTouch.position.x < zTouch.position.x)
+					lift = true;
+				else
+					lift = false;
+			}
+		}
+		GameObject screenReference = GameObject.Find ("ScreenReference");
+		CreatePlane createPlane = GameObject.Find ("Screen").GetComponent<CreatePlane> ();
+		Vector3 zDirection = createPlane.getVec3 ();
+		if (lift == true)
+			zMovement = -zDirection * zMovement.magnitude * zMulitiplitation;
+		else
+			zMovement = zDirection * zMovement.magnitude * zMulitiplitation;
 		this.startPivot (gameObject.transform.position);
 		pivot.transform.Translate (zMovement, Space.World);
 		this.endPivot ();
@@ -132,6 +157,19 @@ public class MultiTouchManipulation : MultiTouchObject
 
 		Vector3 screenPosition = new Vector3 (touch.position.x, touch.position.y, zDistanceFromCamera);
 		Vector3 lastScreenPosition = new Vector3 (touch.position.x - touch.deltaPosition.x, touch.position.y - touch.deltaPosition.y, zDistanceFromCamera);
+
+		Vector3 cameraWorldPosition = this.renderingCamera.ScreenToWorldPoint (screenPosition);
+		Vector3 lastCameraWorldPosition = this.renderingCamera.ScreenToWorldPoint (lastScreenPosition);
+
+		return cameraWorldPosition - lastCameraWorldPosition;
+	}
+	
+	public Vector3 touchMovementVector (iPhoneTouch touch, iPhoneTouch lastTouch)
+	{
+		float zDistanceFromCamera = Vector3.Distance (renderingCamera.transform.position, gameObject.transform.position);
+
+		Vector3 screenPosition = new Vector3 (touch.position.x, touch.position.y, zDistanceFromCamera);
+		Vector3 lastScreenPosition = new Vector3 (lastTouch.position.x, lastTouch.position.y, zDistanceFromCamera);
 
 		Vector3 cameraWorldPosition = this.renderingCamera.ScreenToWorldPoint (screenPosition);
 		Vector3 lastCameraWorldPosition = this.renderingCamera.ScreenToWorldPoint (lastScreenPosition);

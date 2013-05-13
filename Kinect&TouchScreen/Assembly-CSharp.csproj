@@ -49,6 +49,7 @@
      <Compile Include="Assets\EmguCV.cs" />
      <Compile Include="Assets\GUITest.cs" />
      <Compile Include="Assets\KinectGUIScript.cs" />
+     <Compile Include="Assets\KinectSkeleton.cs" />
      <Compile Include="Assets\MultiTouchManipulation.cs" />
      <Compile Include="Assets\MultiTouchObject.cs" />
      <Compile Include="Assets\SceneManager.cs" />
@@ -82,7 +83,6 @@
      <Compile Include="Assets\ZigFu\Scripts\_Internal\TimedBuffer.cs" />
      <Compile Include="Assets\ZigFu\Scripts\_Internal\kinectSpecific.cs" />
      <Compile Include="Assets\handTracker.cs" />
-     <Compile Include="Assets\kinectSkeleton.cs" />
      <Compile Include="Assets\touch.cs" />
      <None Include="Assets\Standard Assets\Projectors\Guidelines.txt" />
      <None Include="Assets\Standard Assets (Mobile)\Shaders\Particle Shaders\Mobile Multiply Culled.shader" />
@@ -108,8 +108,17 @@
  <Reference Include="Emgu.CV">
  <HintPath>Assets\Plugins\Emgu.CV.dll</HintPath>
  </Reference>
+ <Reference Include="Emgu.CV.ML">
+ <HintPath>Assets\Emgu.CV.ML.dll</HintPath>
+ </Reference>
+ <Reference Include="Emgu.CV.UI">
+ <HintPath>Assets\Emgu.CV.UI.dll</HintPath>
+ </Reference>
  <Reference Include="Emgu.Util">
  <HintPath>Assets\Plugins\Emgu.Util.dll</HintPath>
+ </Reference>
+ <Reference Include="ZedGraph">
+ <HintPath>Assets\ZedGraph.dll</HintPath>
  </Reference>
  <Reference Include="System.Drawing">
  <HintPath>Assets\Plugins\System.Drawing.dll</HintPath>

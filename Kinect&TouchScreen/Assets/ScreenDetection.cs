@@ -35,9 +35,28 @@ public class ScreenDetection : MonoBehaviour
 	bool detectFinish = false;
 	Image<Gray,byte> originalDepth;
 	Image<Gray,byte> kinectDepth;
+//	Image<Gray,byte> originalDepthResize;
+//	Image<Gray,byte> kinectDepthResize;
+	Image<Gray,byte> correctDepth;
 	Image<Bgr,byte> kinectImage;
 	Color32[] rawImageMap;
 	short[] rawDepthMap;
+	
+	//
+	List<Vector3> cloudPointDepth = new List<Vector3> ();
+	List<Vector3> cloudPointImage = new List<Vector3> ();
+	double fx_rgb = 514.584872;
+	double fy_rgb = 519.001874;
+	double cx_rgb = 317.349972;
+	double cy_rgb = 255.444059;
+	double fx_d = 571.381399;
+	double fy_d = 569.403908;
+	double cx_d = 310.071926;
+	double cy_d = 243.955165;
+	Vector3 cloudT = new Vector3 ((float)2.581776e-002, (float)5.981391e-003, (float)-3.718191e-003);
+	Matrix4x4 cloudR = new Matrix4x4 ();
+	
+	//
 	// Use this for initialization
 	void Start ()
 	{	
@@ -47,6 +66,16 @@ public class ScreenDetection : MonoBehaviour
 	public Image<Gray,byte> getKinectDepth ()
 	{	
 		return this.kinectDepth;
+	}
+	
+	public Image<Bgr,byte>getKinectColor ()
+	{
+		return this.kinectImage;
+	}
+	
+	public short[] getOriginalDepth()
+	{
+		return rawDepthMap;
 	}
 
 	void displayImage (ZigImage image, ZigDepth depth)
@@ -66,19 +95,47 @@ public class ScreenDetection : MonoBehaviour
 		short min = 100;
 		
 		originalDepth = new Image<Gray, byte> (depth.xres, depth.yres); 
+//		originalDepthResize = new Image<Gray, byte> (depth.xres * 2, depth.yres * 2);
 		kinectDepth = new Image<Gray, byte> (depth.xres, depth.yres);
-		
+//		kinectDepthResize = new Image<Gray, byte> (depth.xres * 2, depth.yres * 2);
 		byte[,,] originalDepthData = originalDepth.Data;
 		byte[,,] kinectDepthData = kinectDepth.Data;
+		
+		
+		//
+//		correctDepth = new Image<Gray, byte> (depth.xres * 2, depth.yres * 2);
+//		byte[,,] correctDepthData = correctDepth.Data;
+		cloudR [0, 0] = (float)9.9999747049903e-001;
+		cloudR [0, 1] = (float)9.5116839735929e-004;
+		cloudR [0, 2] = (float)-2.0382036736617e-003;
+		cloudR [0, 3] = (float)2.581776e-002;
+		cloudR [1, 0] = (float)-9.9203198804195e-004;
+		cloudR [1, 1] = (float)9.9979662704587e-001;
+		cloudR [1, 2] = (float)-2.0142502829375e-002;
+		cloudR [1, 3] = (float)5.981391e-003;
+		cloudR [2, 0] = (float)2.0186302460246e-003;
+		cloudR [2, 1] = (float)2.0144473842137e-002;
+		cloudR [2, 2] = (float)9.9979504164881e-001;
+		cloudR [2, 3] = (float)-3.718191e-003;
+		cloudR [3, 0] = 0;
+		cloudR [3, 1] = 0;
+		cloudR [3, 2] = 0;
+		cloudR [3, 3] = 1;
+		cloudPointDepth.Clear ();
+		cloudPointImage.Clear ();
+		//
 		for (int i=0; i<depth.xres; i++) {
 			for (int j=0; j<depth.yres; j++) {
 			
 				originalDepthData [j, i, 0] = (byte)rawDepthMap [j * depth.xres + i];
 				kinectDepthData [j, i, 0] = (byte)(rawDepthMap [j * depth.xres + i] * 255 / maxDepth);
+			
 			}
 		}
-		
-		
+//		originalDepthResize = originalDepth.PyrUp ();
+//		byte[,,] originalDepthResizeData = originalDepthResize.Data;
+//		kinectDepthResize = kinectDepth.PyrUp ();
+//		byte[,,] kinectDepthResizeData = kinectDepthResize.Data;
 //		//Save the original image data in kinectImaga
 		kinectImage = new Image<Bgr, byte> (image.xres, image.yres);
 		byte[,,] kinectImageData = kinectImage.Data;
@@ -91,6 +148,31 @@ public class ScreenDetection : MonoBehaviour
 			}
 		}
 		
+//		for (int i=0; i<image.xres; i++)
+//			for (int j=0; j<image.yres; j++) {
+//				//
+//				Vector3 depthPoint3D = new Vector3 ();
+//				if (kinectDepthResizeData [j, i, 0] != 0) {
+//					depthPoint3D.x = (float)((i - cx_d) * kinectDepthResizeData [j, i, 0] / fx_d);
+//					depthPoint3D.y = (float)((j - cy_d) * kinectDepthResizeData [j, i, 0] / fy_d);
+//					depthPoint3D.z = (float)kinectDepthResizeData [j, i, 0];
+//					cloudPointDepth.Add (depthPoint3D);
+//					Vector3 imagePoint3D = new Vector3 ();
+////					imagePoint3D = cloudR.MultiplyVector (depthPoint3D);
+//					imagePoint3D = depthPoint3D;
+//
+//					cloudPointImage.Add (imagePoint3D);
+//					int colorX = (int)((imagePoint3D.x * fx_rgb / imagePoint3D.z) + cx_rgb);
+//					int colorY = (int)((imagePoint3D.y * fy_rgb / imagePoint3D.z) + cy_rgb);
+//					correctDepthData [colorY, colorX, 0] = kinectDepthResizeData [j, i, 0];
+//				}
+//				
+//				//
+//			}
+//		Emgu.CV.AdaptiveSkinDetector skinDetector = new Emgu.CV.AdaptiveSkinDetector (1, AdaptiveSkinDetector.MorphingMethod.ERODE_DILATE);
+//		Image<Gray,byte> handImage = new Image<Gray, byte> (kinectImage.Size);
+//		skinDetector.Process (kinectImage, handImage);
+		
 		string win1 = "KinectImage";
 		Emgu.CV.CvInvoke.cvNamedWindow (win1);
 		CvInvoke.cvShowImage (win1, kinectImage);
@@ -98,6 +180,29 @@ public class ScreenDetection : MonoBehaviour
 		string win2 = "KinectDepth";
 		Emgu.CV.CvInvoke.cvNamedWindow (win2);
 		CvInvoke.cvShowImage (win2, kinectDepth);
+		
+		Image<Bgr,byte> mixImage1 = new Image<Bgr, byte> (kinectImage.Size);
+		CvInvoke.cvAddWeighted (kinectDepth.Convert<Bgr,byte> (), 0.5, kinectImage, 0.5, 0, mixImage1);
+//		
+//		Image<Bgr,byte> mixImage2 = new Image<Bgr, byte> (kinectImage.Size);
+//		CvInvoke.cvAddWeighted (correctDepth.Convert<Bgr,byte> (), 0.5, kinectImage, 0.5, 0, mixImage2);
+//		
+		string win3 = "Mix";
+		Emgu.CV.CvInvoke.cvNamedWindow (win3);
+		CvInvoke.cvShowImage (win3, mixImage1);
+		
+//		string win4 = "Hand";
+//		Emgu.CV.CvInvoke.cvNamedWindow (win4);
+//		CvInvoke.cvShowImage (win4, handImage);
+//		
+//		string win5 = "Mix2";
+//		Emgu.CV.CvInvoke.cvNamedWindow (win5);
+//		CvInvoke.cvShowImage (win5, mixImage2);
+		
+//		string win4 = "CorrectDepth";
+//		Emgu.CV.CvInvoke.cvNamedWindow (win4);
+//		CvInvoke.cvShowImage (win4, correctDepth);
+//	
 	}
 
 	void getDepthAndColorImage (ZigImage image, ZigDepth depth)
@@ -105,12 +210,12 @@ public class ScreenDetection : MonoBehaviour
 		
 		displayImage (image, depth);
 		Image<Gray,byte> grayImage = kinectImage.Convert<Gray,byte> ();
-		Image<Gray,byte> originalGray=grayImage.Copy();
+		Image<Gray,byte> originalGray = grayImage.Copy ();
 		grayImage = kinectImage.Convert<Gray,byte> ();
 		byte[,,] grayImageData = grayImage.Data;
 		for (int i=0; i<grayImage.Width; i++)
 			for (int j=0; j<grayImage.Height; j++) {
-				if (grayImageData [j, i, 0] < 180)
+				if (grayImageData [j, i, 0] < 190)
 					grayImageData [j, i, 0] = 0;
 				else
 					grayImageData [j, i, 0] = 255;
@@ -134,23 +239,18 @@ public class ScreenDetection : MonoBehaviour
 			for (Contour<Point>contours=cannyImage.FindContours(); contours!=null; contours=contours.HNext) {
 				if (contours.Area > maxArea) {
 					maxContour = contours;
-					maxArea = contours.Area;
 				}	
-//				Point[] hull = maxContour.GetConvexHull (Emgu.CV.CvEnum.ORIENTATION.CV_CLOCKWISE, storage).ToArray ();
-//				if(hull.GetLength()>maxLength)
-//				{
-//					longestContour=contours;
-//					maxLength=hull.get
-//				}
-			}
-		}
-		
-		using (MemStorage storage= new MemStorage()) {
-			if (maxContour != null) {
-				Point[] hull = maxContour.GetConvexHull (Emgu.CV.CvEnum.ORIENTATION.CV_CLOCKWISE, storage).ToArray ();
+				Point[] hull = contours.GetConvexHull (Emgu.CV.CvEnum.ORIENTATION.CV_CLOCKWISE, storage).ToArray ();
 				contourImage.DrawPolyline (hull, true, new Bgr (255, 255, 255), 1);
 			}
 		}
+		
+//		using (MemStorage storage= new MemStorage()) {
+//			if (maxContour != null) {
+//				Point[] hull = maxContour.GetConvexHull (Emgu.CV.CvEnum.ORIENTATION.CV_CLOCKWISE, storage).ToArray ();
+//				contourImage.DrawPolyline (hull, true, new Bgr (255, 255, 255), 1);
+//			}
+//		}
 		
 		Image<Gray,byte> cornerImage = contourImage.Convert<Gray,byte> ();
 		Image<Bgr,byte> eigImage = new Image<Bgr,byte> (cornerImage.Size);
@@ -206,12 +306,19 @@ public class ScreenDetection : MonoBehaviour
 					System.Math.Abs (corners [leftDownIndex].Y - screenCorners [3].Y) > 10) {
 					return;
 				}
-				
+//				OpenNI
 				int depthLeftUp = rawDepthMap [corners [leftUpIndex].Y * depth.xres + corners [leftUpIndex].X];
 				int depthRightUp = rawDepthMap [corners [rightUpIndex].Y * depth.xres + corners [rightUpIndex].X];
 				int depthRightDown = rawDepthMap [corners [rightDownIndex].Y * depth.xres + corners [rightDownIndex].X];
 				int depthLeftDown = rawDepthMap [corners [leftDownIndex].Y * depth.xres + corners [leftDownIndex].X];
-
+				
+			
+//				//Windows SDK
+//				int depthLeftUp = (int)originalDepthResize.Data [corners [leftUpIndex].Y, corners [leftUpIndex].X, 0];
+//				int depthRightUp = (int)originalDepthResize.Data [corners [rightUpIndex].Y, corners [rightUpIndex].X, 0];
+//				int depthRightDown = (int)originalDepthResize.Data [corners [rightDownIndex].Y, corners [rightDownIndex].X, 0];
+//				int depthLeftDown = (int)originalDepthResize.Data [corners [leftDownIndex].Y, corners [leftDownIndex].X, 0];
+				
 				if (depthLeftUp != 0 && depthRightUp != 0 && depthRightDown != 0 && depthLeftDown != 0) {
 
 					leftUpDepth.Add (depthLeftUp);
@@ -265,7 +372,7 @@ public class ScreenDetection : MonoBehaviour
 		}
 		Image<Bgr,byte> mixImage = new Image<Bgr, byte> (contourImage.Size);
 		CvInvoke.cvAddWeighted (kinectImage.Convert<Bgr,byte> (), 0.5, contourImage.Convert<Bgr,byte> (), 0.5, 0, mixImage);
-	 Image<Bgr,byte> mixImage2 = new Image<Bgr, byte> (contourImage.Size);
+		Image<Bgr,byte> mixImage2 = new Image<Bgr, byte> (contourImage.Size);
 		CvInvoke.cvAddWeighted (kinectDepth.Convert<Bgr,byte> (), 0.5, contourImage.Convert<Bgr,byte> (), 0.5, 0, mixImage2);
 		string win0 = "OriginalGray";
 		Emgu.CV.CvInvoke.cvNamedWindow (win0);
@@ -377,5 +484,7 @@ public class ScreenDetection : MonoBehaviour
 		Camera.main.transform.position = new Vector3 (0, 0, 0);
 		Camera.main.transform.LookAt (new Vector3 (0, 0, 1));
 	}
+	
+
 }
 

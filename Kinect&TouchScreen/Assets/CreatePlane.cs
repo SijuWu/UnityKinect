@@ -28,9 +28,9 @@ public class CreatePlane : MonoBehaviour
 		//Set the corners of the plane
 		Mesh mesh = new Mesh ();
 		GetComponent<MeshFilter> ().mesh = mesh;
-		screenCornerCoordinates [0] = new Vector3 (492.7f, -446.8f, 1268.0f);
-		screenCornerCoordinates [1] = new Vector3 (-417.3f, -447.9f, 1336.0f);
-		screenCornerCoordinates [2] = new Vector3 (-389.1f, -320.9f, 1792.0f);
+		screenCornerCoordinates [0] = new Vector3 (460.6f, -438.3f, 1300.0f);
+		screenCornerCoordinates [1] = new Vector3 (-454.0f, -441.2f, 1339.0f);
+		screenCornerCoordinates [2] = new Vector3 (-427.6f, -307.9f, 1796.0f);
 		screenCornerCoordinates [3] = screenCornerCoordinates [2] + screenCornerCoordinates [0] - screenCornerCoordinates [1];
 		
 		//Add the corners to the mesh
@@ -193,6 +193,21 @@ public class CreatePlane : MonoBehaviour
 	public Vector3 getStartPoint ()
 	{
 		return screenRef [0];
+	}
+	
+	public Vector3 getVec1 ()
+	{
+		return vec1;
+	}
+	
+	public Vector3 getVec2 ()
+	{
+		return vec2;
+	}
+	
+	public Vector3 getVec3 ()
+	{
+		return vec3;
 	}
 }
 
