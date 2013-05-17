@@ -52,6 +52,7 @@
      <Compile Include="Assets\KinectSkeleton.cs" />
      <Compile Include="Assets\MultiTouchManipulation.cs" />
      <Compile Include="Assets\MultiTouchObject.cs" />
+     <Compile Include="Assets\PointCloud.cs" />
      <Compile Include="Assets\SceneManager.cs" />
      <Compile Include="Assets\ScreenDetection.cs" />
      <Compile Include="Assets\ZigFu\SampleScenes\_Data\Scripts\ExitOnEscape.cs" />

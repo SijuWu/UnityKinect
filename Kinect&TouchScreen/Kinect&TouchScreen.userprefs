@@ -1,18 +1,16 @@
 ﻿<Properties GitUserInfo="UsingGIT">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\CreatePlane.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\KinectSkeleton.cs">
     <Files>
-      <File FileName="Assets\CreatePlane.cs" Line="101" Column="3" />
-      <File FileName="Assets\ScreenDetection.cs" Line="1" Column="1" />
-      <File FileName="Assets\KinectSkeleton.cs" Line="246" Column="59" />
-      <File FileName="Assets\KinectGUIScript.cs" Line="1" Column="1" />
+      <File FileName="Assets\PointCloud.cs" Line="4" Column="1" />
+      <File FileName="Assets\KinectSkeleton.cs" Line="304" Column="33" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Assets" expanded="True">
-              <Node name="CreatePlane.cs" selected="True" />
+              <Node name="KinectSkeleton.cs" selected="True" />
             </Node>
           </Node>
           <Node name="Assembly-UnityScript" expanded="True">
